@@ -1,6 +1,23 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import TaskList from '../components/TaskList';
 
+// Mock framer-motion to avoid animation issues in tests
+jest.mock('framer-motion', () => {
+    const actual = jest.requireActual('framer-motion');
+    return {
+        ...actual,
+        motion: {
+            div: (props) => <div {...props}>{props.children}</div>,
+            li: (props) => <li {...props}>{props.children}</li>,
+            button: (props) => <button {...props}>{props.children}</button>,
+            span: (props) => <span {...props}>{props.children}</span>,
+            input: (props) => <input {...props}>{props.children}</input>,
+        },
+        AnimatePresence: (props) => <>{props.children}</>,
+        useAnimate: () => [null, jest.fn()]
+    };
+});
+
 describe('TaskList', () => {
     const mockTasks = [
         {
@@ -32,6 +49,7 @@ describe('TaskList', () => {
                 handleToggleComplete={mockHandleToggleComplete}
                 handleRemoveTask={mockHandleRemoveTask}
                 handleEditTask={mockHandleEditTask}
+                newTaskId={null}
             />
         );
 
@@ -40,12 +58,15 @@ describe('TaskList', () => {
     });
 
     it('calls handleToggleComplete when checkbox is clicked', () => {
+        jest.useFakeTimers();
+
         render(
             <TaskList
                 tasks={mockTasks}
                 handleToggleComplete={mockHandleToggleComplete}
                 handleRemoveTask={mockHandleRemoveTask}
                 handleEditTask={mockHandleEditTask}
+                newTaskId={null}
             />
         );
 
@@ -53,22 +74,32 @@ describe('TaskList', () => {
         fireEvent.click(checkboxes[0]);
 
         expect(mockHandleToggleComplete).toHaveBeenCalledWith(1);
+
+        jest.useRealTimers();
     });
 
     it('calls handleRemoveTask when Remove button is clicked', () => {
+        jest.useFakeTimers();
+
         render(
             <TaskList
                 tasks={mockTasks}
                 handleToggleComplete={mockHandleToggleComplete}
                 handleRemoveTask={mockHandleRemoveTask}
                 handleEditTask={mockHandleEditTask}
+                newTaskId={null}
             />
         );
 
         const removeButtons = screen.getAllByText('Remove');
         fireEvent.click(removeButtons[0]);
 
+        // Fast-forward timers to trigger the delayed removal
+        jest.runAllTimers();
+
         expect(mockHandleRemoveTask).toHaveBeenCalledWith(1);
+
+        jest.useRealTimers();
     });
 
     it('calls handleEditTask when Edit button is clicked', () => {
@@ -78,6 +109,7 @@ describe('TaskList', () => {
                 handleToggleComplete={mockHandleToggleComplete}
                 handleRemoveTask={mockHandleRemoveTask}
                 handleEditTask={mockHandleEditTask}
+                newTaskId={null}
             />
         );
 
@@ -94,10 +126,11 @@ describe('TaskList', () => {
                 handleToggleComplete={mockHandleToggleComplete}
                 handleRemoveTask={mockHandleRemoveTask}
                 handleEditTask={mockHandleEditTask}
+                newTaskId={null}
             />
         );
 
         const completedTask = screen.getByText('Test Task 2');
-        expect(completedTask).toHaveClass('line-through');
+        expect(completedTask).toHaveClass('text-base-content/60');
     });
 }); 

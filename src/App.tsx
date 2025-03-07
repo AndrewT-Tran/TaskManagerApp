@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import Confetti from 'react-confetti';
 import TaskList from './components/TaskList';
 import ThemeSelector from './components/ThemeSelector';
 
@@ -15,6 +17,8 @@ const App: React.FC = () => {
   const [taskName, setTaskName] = useState<string>(''); // Name of the task being added
   const [tasks, setTasks] = useState<Task[]>([]); // Array of tasks
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null); // Track the task being edited
+  const [showConfetti, setShowConfetti] = useState<boolean>(false); // Control confetti display
+  const [newTaskId, setNewTaskId] = useState<number | null>(null); // Track newly added task for animation
 
   // Load tasks from localStorage on initial load
   useEffect(() => {
@@ -40,8 +44,10 @@ const App: React.FC = () => {
   const handleAddTask = (): void => {
     if (taskName.trim() === '') return;
 
+    const newId = tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1;
+
     const newTask: Task = {
-      id: tasks.length + 1,
+      id: newId,
       name: taskName,
       completed: false,
       timestamp: new Date(),
@@ -49,15 +55,32 @@ const App: React.FC = () => {
 
     setTasks((prevTasks) => [...prevTasks, newTask]);
     setTaskName('');
+
+    // Set the new task ID to trigger animation
+    setNewTaskId(newId);
+
+    // Clear the new task ID after animation duration
+    setTimeout(() => {
+      setNewTaskId(null);
+    }, 2000);
   };
 
   // Handle toggling the completion status of a task
   const handleToggleComplete = (id: number): void => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
+    setTasks((prevTasks) => {
+      const updatedTasks = prevTasks.map((task) => {
+        if (task.id === id) {
+          // If task is being marked as completed (not uncompleted), show confetti
+          if (!task.completed) {
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 2000); // Hide confetti after 3 seconds
+          }
+          return { ...task, completed: !task.completed };
+        }
+        return task;
+      });
+      return updatedTasks;
+    });
   };
 
   // Handle removing a task
@@ -87,81 +110,139 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="container mx-auto max-w-lg p-4">
+        {/* Confetti effect when task is completed */}
+        {showConfetti && (
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={200}
+            gravity={0.2}
+          />
+        )}
+
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Task Manager</h1>
+          <motion.h1
+            className="text-2xl font-bold"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Task Manager
+          </motion.h1>
           <ThemeSelector />
         </div>
 
         {/* Task input field */}
         <div className="form-control w-full">
-          <input
+          <motion.input
             type="text"
             placeholder={editingTaskId ? 'Edit Task' : 'New Task'}
             className="input input-bordered w-full"
             value={taskName}
             onChange={(e) => setTaskName(e.target.value)}
             data-testid="task-input"
+            whileFocus={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
           />
         </div>
 
         {/* Add or Save task button */}
-        <button
+        <motion.button
           className="btn btn-primary w-full mt-4"
           onClick={editingTaskId ? handleSaveEdit : handleAddTask}
           data-testid="add-task-button"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
           {editingTaskId ? 'Save Edit' : 'Add Task'}
-        </button>
+        </motion.button>
 
         {/* Navigation Links */}
         <div className="flex justify-center gap-2 mt-6">
-          <Link to="/" className="btn btn-outline" data-testid="all-tasks-link">
-            All Tasks
-          </Link>
-          <Link to="/active" className="btn btn-outline" data-testid="active-tasks-link">
-            Active Tasks
-          </Link>
-          <Link to="/completed" className="btn btn-outline" data-testid="completed-tasks-link">
-            Completed Tasks
-          </Link>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Link to="/" className="btn btn-outline" data-testid="all-tasks-link">
+              All Tasks
+            </Link>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Link to="/active" className="btn btn-outline" data-testid="active-tasks-link">
+              Active Tasks
+            </Link>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Link to="/completed" className="btn btn-outline" data-testid="completed-tasks-link">
+              Completed Tasks
+            </Link>
+          </motion.div>
         </div>
 
         {/* Routes */}
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <TaskList
-                tasks={tasks}
-                handleToggleComplete={handleToggleComplete}
-                handleRemoveTask={handleRemoveTask}
-                handleEditTask={handleEditTask}
-              />
-            }
-          />
-          <Route
-            path="/active"
-            element={
-              <TaskList
-                tasks={tasks.filter((task) => !task.completed)}
-                handleToggleComplete={handleToggleComplete}
-                handleRemoveTask={handleRemoveTask}
-                handleEditTask={handleEditTask}
-              />
-            }
-          />
-          <Route
-            path="/completed"
-            element={
-              <TaskList
-                tasks={tasks.filter((task) => task.completed)}
-                handleToggleComplete={handleToggleComplete}
-                handleRemoveTask={handleRemoveTask}
-                handleEditTask={handleEditTask}
-              />
-            }
-          />
-        </Routes>
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <motion.div
+                  key="all"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <TaskList
+                    tasks={tasks}
+                    handleToggleComplete={handleToggleComplete}
+                    handleRemoveTask={handleRemoveTask}
+                    handleEditTask={handleEditTask}
+                    newTaskId={newTaskId}
+                  />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/active"
+              element={
+                <motion.div
+                  key="active"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <TaskList
+                    tasks={tasks.filter((task) => !task.completed)}
+                    handleToggleComplete={handleToggleComplete}
+                    handleRemoveTask={handleRemoveTask}
+                    handleEditTask={handleEditTask}
+                    newTaskId={newTaskId}
+                  />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/completed"
+              element={
+                <motion.div
+                  key="completed"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <TaskList
+                    tasks={tasks.filter((task) => task.completed)}
+                    handleToggleComplete={handleToggleComplete}
+                    handleRemoveTask={handleRemoveTask}
+                    handleEditTask={handleEditTask}
+                    newTaskId={newTaskId}
+                  />
+                </motion.div>
+              }
+            />
+          </Routes>
+        </AnimatePresence>
       </div>
     </Router>
   );
