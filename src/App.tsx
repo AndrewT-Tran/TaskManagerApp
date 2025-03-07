@@ -6,6 +6,12 @@ import TaskList from './components/TaskList';
 import ThemeSelector from './components/ThemeSelector';
 import NavLink from './components/NavLink';
 
+// Import Poppins font
+import '@fontsource/poppins/400.css';
+import '@fontsource/poppins/500.css';
+import '@fontsource/poppins/600.css';
+import '@fontsource/poppins/700.css';
+
 // Define Task type with 'completed' field
 type Task = {
   id: number;
@@ -20,6 +26,7 @@ const App: React.FC = () => {
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null); // Track the task being edited
   const [showConfetti, setShowConfetti] = useState<boolean>(false); // Control confetti display
   const [newTaskId, setNewTaskId] = useState<number | null>(null); // Track newly added task for animation
+  const [alert, setAlert] = useState<{ type: 'success' | 'error', message: string } | null>(null); // Alert state
 
   // Calculate task counts for badges
   const taskCounts = useMemo(() => {
@@ -73,9 +80,13 @@ const App: React.FC = () => {
     // Set the new task ID to trigger animation
     setNewTaskId(newId);
 
-    // Clear the new task ID after animation duration
+    // Show success alert
+    setAlert({ type: 'success', message: 'Task added successfully!' });
+
+    // Clear the new task ID and alert after animation duration
     setTimeout(() => {
       setNewTaskId(null);
+      setAlert(null);
     }, 2000);
   };
 
@@ -99,7 +110,16 @@ const App: React.FC = () => {
 
   // Handle removing a task
   const handleRemoveTask = (id: number): void => {
+    const taskToRemove = tasks.find(task => task.id === id);
     setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+
+    // Show error alert
+    setAlert({ type: 'error', message: `Task "${taskToRemove?.name}" deleted` });
+
+    // Clear alert after 2 seconds
+    setTimeout(() => {
+      setAlert(null);
+    }, 2000);
   };
 
   // Start editing a task
@@ -123,7 +143,19 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="container mx-auto max-w-lg p-4">
+      <div className="container mx-auto max-w-lg p-4 font-['Poppins']">
+        {/* Alert */}
+        {alert && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`alert ${alert.type === 'success' ? 'alert-success alert-soft' : 'alert-error'} mb-4`}
+          >
+            <span>{alert.message}</span>
+          </motion.div>
+        )}
+
         {/* Confetti effect when task is completed */}
         {showConfetti && (
           <Confetti
