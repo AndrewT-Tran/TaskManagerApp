@@ -58,7 +58,7 @@ const TaskList: React.FC<TaskListProps> = ({
     setTimeout(() => {
       handleRemoveTask(id);
       setItemToRemove(null);
-    }, 300); // Reduced from 500ms to 300ms
+    }, 200); // Reduced from 300ms to 200ms
   };
 
   // Handle task completion with animation
@@ -133,7 +133,7 @@ const TaskList: React.FC<TaskListProps> = ({
                   x: 500, // Slide out to the right when removed
                   height: 0,
                   marginBottom: 0,
-                  transition: { duration: 0.3, ease: "easeInOut" } // Reduced from 0.5s to 0.3s
+                  transition: { duration: 0.2, ease: "easeOut" } // Faster duration and changed easing
                 }}
                 transition={{ duration: 0.3 }}
                 layout
