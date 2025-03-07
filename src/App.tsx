@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Confetti from 'react-confetti';
 import TaskList from './components/TaskList';
 import ThemeSelector from './components/ThemeSelector';
+import NavLink from './components/NavLink';
 
 // Define Task type with 'completed' field
 type Task = {
@@ -19,6 +20,19 @@ const App: React.FC = () => {
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null); // Track the task being edited
   const [showConfetti, setShowConfetti] = useState<boolean>(false); // Control confetti display
   const [newTaskId, setNewTaskId] = useState<number | null>(null); // Track newly added task for animation
+
+  // Calculate task counts for badges
+  const taskCounts = useMemo(() => {
+    const totalCount = tasks.length;
+    const completedCount = tasks.filter(task => task.completed).length;
+    const activeCount = totalCount - completedCount;
+
+    return {
+      total: totalCount,
+      active: activeCount,
+      completed: completedCount
+    };
+  }, [tasks]);
 
   // Load tasks from localStorage on initial load
   useEffect(() => {
@@ -161,21 +175,33 @@ const App: React.FC = () => {
 
         {/* Navigation Links */}
         <div className="flex justify-center gap-2 mt-6">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link to="/" className="btn btn-outline" data-testid="all-tasks-link">
-              All Tasks
-            </Link>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link to="/active" className="btn btn-outline" data-testid="active-tasks-link">
-              Active Tasks
-            </Link>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link to="/completed" className="btn btn-outline" data-testid="completed-tasks-link">
-              Completed Tasks
-            </Link>
-          </motion.div>
+          <NavLink
+            to="/"
+            count={taskCounts.total}
+            badgeColor="badge-neutral"
+            activeColor="bg-primary"
+            dataTestId="all-tasks-link"
+          >
+            All Tasks
+          </NavLink>
+          <NavLink
+            to="/active"
+            count={taskCounts.active}
+            badgeColor="badge-error"
+            activeColor="bg-error"
+            dataTestId="active-tasks-link"
+          >
+            Active Tasks
+          </NavLink>
+          <NavLink
+            to="/completed"
+            count={taskCounts.completed}
+            badgeColor="badge-success"
+            activeColor="bg-success"
+            dataTestId="completed-tasks-link"
+          >
+            Completed Tasks
+          </NavLink>
         </div>
 
         {/* Routes */}
