@@ -38,7 +38,7 @@ A modern task management application built with React and TypeScript. Features a
 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/task-manager.git
+git clone https://github.com/AndrewT-Tran/TaskManagerApp.git
 cd task-manager
 npm install
 ```

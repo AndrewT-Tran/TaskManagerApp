@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 const themes = [
     'abyss',
     'dracula',
-    'cyberpunk',
-    'halloween',
     'garden',
     'forest',
-    'aqua',
     'lofi',
+    'nord',
+    'emerald',
+    'pastel'
 ];
 
 const ThemeSelector: React.FC = () => {
