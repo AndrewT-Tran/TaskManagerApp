@@ -38,7 +38,7 @@ const NavLink: React.FC<NavLinkProps> = ({
                 </div>
                 {isActive && (
                     <motion.div
-                        className="absolute -bottom-1 left-0 right-0 h-1 bg-accent"
+                        className="absolute -bottom-1 left-0  rounded-full right-0 h-1 bg-accent"
                         layoutId="activeIndicator"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
